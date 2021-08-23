@@ -19,45 +19,122 @@ The following python library must be installed to run the script
 #### example 
 ```
 with mr.MatgenRester(username="test",password="only for example") as m:
-   ##return one structure
+   ##return list with one structure
    structure = q.get_structure_by_matid(matid='mat_3',fields=["matid","formula"])
    ##return list of data
-   list = q.get_structure_with_filter(elements="Ba-S", filter={"_nelements":"O-Ti"}, fields=['matid'], pages=5, pageno=0)
-   list2 =q.get_structure_with_filter(elements="Ba-S", filter={"_voume":[0,100],"_crystal_system":["cubic","tetragonal","hexagonal","trigonal","orthorhombic","monoclinic","triclinic","amorphous"]}, fields=['matid'], pages=5, pageno=0)
+   list = q.get_structure_with_filter(elements="Ba-S", filter={
+    "in": "Na-O",
+    "not": "C",
+    "searchType": "all",
+    "crystalSystem": [
+      "cubic",
+      "hexagonal",
+      "monoclinic",
+      "orthorhombic",
+      "tetragonal",
+      "triclinic",
+      "trigonal"
+    ],
+    "pointGroup": [
+      "-1",
+      "-3",
+      "-3m",
+      "-4",
+      "-42m",
+      "-43m",
+      "-6",
+      "-6m2",
+      "1",
+      "2",
+      "2/m",
+      "222",
+      "23",
+      "3",
+      "32",
+      "3m",
+      "4",
+      "4/m",
+      "4/mmm",
+      "422",
+      "432",
+      "4mm",
+      "6",
+      "6/m",
+      "6/mmm",
+      "622",
+      "6mm",
+      "m",
+      "m-3",
+      "m-3m",
+      "mm2",
+      "mmm"
+    ],
+    "spaceGroup": [
+      "Aea2",
+      "Aem2",
+      "R3m"
+    ],
+    "volume": [
+      0,
+      10000
+    ],
+    "properties": [
+      "cif",
+      "xrd.x"
+    ],
+    "ifIcsdid": True
+   }, fields=['matid'], size=5, page=0)
 ```
 
 #### attributes
 1. `username, password`: matgen account
 2. `token`: user can get token key after logged in from [matgen](https://matgen.nscc-gz.cn)
-3. `matid`: matgen id of the structure
-4. `fields`: return data fields, such as matid, icsd_id, formula, conventional_cell, conventional_cell_site, primitive_cell, primitive_cell_site, crystal_system, point_group,density, cif_data, magnetization, bandStructure, densityOfStates, poscar_cc, poscar_pc, same_file, poscar, kpoints_relax, kpoints_scf, kpath
-5. `elements`: the set of elements that the compound must have ','
-6. `_nelements`: the set of excluded elements that the compound must have ','
+3. `id`: the target id of the structure
+4. `idType`: type of the target id, such as matid
+5. `fields`: return data fields, such as "structure","bandStructure","densityOfStates","cif", "elasticProperty","fermiSurface","magneticProperty","pdf","xrd"
+6. `filter`: filter dic for searching structure, such as "in", "not","searchType"
+7. `size`: the size of return records
+8. `pindex`: the page index after pagination
 
 ### 2. used in command line
 
 #### example
-`python matgenrester.py -id mat_3`
+`python matgenrester.py -id mat_3 -idType matid`
 
 #### optional arguments:
 ```
-  -h, --help           show this help message and exit
-  -e E, --elements E    find the structures that contain the specific
+  -h, --help            show this help message and exit
+  -idType IDTYPE, --idType IDTYPE
+                        specify the idType for search, such as matid, icsd_id,
+                        cod_id, oqmd_id
+  -id ID, --id ID       find the structure with the target id,such as mat_8886
+                        as matid
+  -size SIZE, --size SIZE
+                        specify the number of return data
+  -pindex PINDEX, --pindex PINDEX
+                        specify the page index after pagination
+  -in IN, --in IN       find the structures that contain the specific
                         elements, for more than one elements, connect elements
                         by '-', ex. Ba-S
-  -ne NE, --nelements NE
-                        find the structures that do not contain the specific
-                        elements,for more than one elements, connect elements
+  -not NOT, --not NOT   find the structures that don't contain the specific
+                        elements, for more than one elements, connect elements
                         by '-', ex. Ba-S
-  -id ID, --matid ID    find structures that have the same matid,ex.mat_1
-  -p P                  specify the number of return data
-  -s S                  specify the page index after pagination
-  -cs CS, --crystalSystem CS
-                        filter data by its crystal system, such as cubic,tetra
+  -searchType SEARCHTYPE, --searchType SEARCHTYPE
+                        specify the search type for searching structures,
+                        'only' means finding the structures that only contain
+                        the specific elements, 'all' means finding the
+                        structures that not only contain the specific
+                        elements, but also, sometimes, other elements
+  -crystalSystem CRYSTALSYSTEM, --crystalSystem CRYSTALSYSTEM
+                        filter data by its crystal_system, such as cubic,tetra
                         gonal,hexagonal,trigonal,orthorhombic,monoclinic,tricl
                         inic,amorphous
-  -sg SG, --spaceGroup SG
-                        filter data by its space group, specify space group
+  -pointGroup POINTGROUP, --pointGroup POINTGROUP
+                        filter data by its point_group, such as cubic,tetragon
+                        al,hexagonal,trigonal,orthorhombic,monoclinic,triclini
+                        c,amorphous
+  -spacegroup SPACEGROUP, --spacegroup SPACEGROUP
+                        filter data by its spacegroup, specify space group
                         type, such as P1,P-1,P2,P21,C2,Pm,Pc,Cm,Cc,P2/m,P21m,P
                         2/c,P21c,C2/m,C2/c,P222,P2221,P21212,P212121,C222,C222
                         1,F222,I222,I212121,Pmm2,Pmc21,Pcc2,Pma2,Pca21,Pnc2,Pm
@@ -82,13 +159,23 @@ with mr.MatgenRester(username="test",password="only for example") as m:
                         ,P4332,P4132,F432,F4132,I432,I4132,P-43m,P-43n,F-43m,F
                         -43c,I-43m,I-43d,Pm-3m,Pn-3n,Pm-3n,Pn-3m,Fm-3m,Fm-3m,F
                         d-3m,Fd-3c,Im-3m,Ia-3d
-  -v V, --volume V      filter data by its volume, specify volume scope, such
-                        as 0,100
-  -f F                  specify return data fields, such as matid, icsd_id,
-                        formula, conventional_cell, conventional_cell_site, pr
-                        imitive_cell,primitive_cell_site,crystal_system,point_
-                        group,density,cif_data,magnetization, bandStructure,de
-                        nsityOfStates,poscar_cc,poscar_pc,same_file,poscar,
-                        kpoints_relax, kpoints_scf,kpath
+  -volume VOLUME, --volume VOLUME
+                        filter data by its volume, specify volume scope, such
+                        as '0,100'
+  -density DENSITY, --density DENSITY
+                        filter data by its density, specify volume scope, such
+                        as '0,100'
+  -icsdid ICSDID, --icsdid ICSDID
+                        filter data if it contains a icsdid
+  -codid CODID, --codid CODID
+                        filter data if it contains a codid
+  -oqmdid OQMDID, --oqmdid OQMDID
+                        filter data if it contains a oqmdid
+  -fields FIELDS, --fields FIELDS
+                        specify return data fields, such as 'structure',
+                        'bandStructure', 'densityOfStates', 'cif',
+                        'elasticProperty', 'fermiSurface', 'magneticProperty',
+                        'pdf', 'xrd'
   -o O                  set file for downloading
-  -t T                  upload matgen token for seaching```
+  -token TOKEN, --token TOKEN
+                        upload matgen token for seaching```
